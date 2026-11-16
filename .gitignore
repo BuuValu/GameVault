@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+!.env.example
+coverage/
+*.log
+.DS_Store
+
+# Respaldos y archivos privados de base de datos
+*.sql
+!database/gamevault.sql
+*.sql.gz
+*.dump
+backups/

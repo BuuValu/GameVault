@@ -1,0 +1,5552 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "GameVault — API REST",
+    "version": "1.0.0",
+    "description": "Documentación interactiva de la API REST de GameVault. La API utiliza identificadores y campos JSON en inglés. Las contraseñas se protegen del lado del servidor mediante Argon2id, con salt aleatorio único por contraseña. El registro y el cambio de contraseña requieren un mínimo de 15 caracteres. Las contraseñas existentes fueron migradas desde texto plano a hashes Argon2id. La autenticación utiliza tokens JWT y los permisos se verifican según el rol del usuario."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor Node.js local"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Sistema",
+      "description": "Estado del servidor"
+    },
+    {
+      "name": "Users",
+      "description": "Registro, autenticación y administración"
+    },
+    {
+      "name": "Video Games",
+      "description": "Catálogo de videojuegos y géneros asociados"
+    },
+    {
+      "name": "Genres",
+      "description": "Catálogo de géneros"
+    },
+    {
+      "name": "Tags",
+      "description": "Catálogo de etiquetas"
+    },
+    {
+      "name": "Purchases",
+      "description": "Compras y biblioteca derivada de compras confirmadas"
+    },
+    {
+      "name": "Reviews",
+      "description": "Reseñas de juegos comprados"
+    },
+    {
+      "name": "Achievements",
+      "description": "Definición de logros por videojuego"
+    },
+    {
+      "name": "Progress",
+      "description": "Progreso de logros por usuario"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Sistema"
+        ],
+        "summary": "Comprobar el estado del servidor",
+        "operationId": "get_api_health",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Listar usuarios (administrador)",
+        "operationId": "get_api_users",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Registrar usuario",
+        "operationId": "post_api_users",
+        "responses": {
+          "201": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRegistration"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Iniciar sesión y obtener JWT",
+        "operationId": "post_api_sessions",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Consultar usuario (dueño o administrador)",
+        "operationId": "get_api_users_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Actualizar usuario (dueño o administrador)",
+        "operationId": "put_api_users_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Eliminar usuario (administrador)",
+        "operationId": "delete_api_users_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      }
+    },
+    "/api/users/{id}/password": {
+      "patch": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Cambiar contraseña (dueño o administrador)",
+        "operationId": "patch_api_users_id_password",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChange"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/video-games": {
+      "get": {
+        "tags": [
+          "Video Games"
+        ],
+        "summary": "Listar videojuegos con filtros y paginación",
+        "operationId": "get_api_video_games",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoGameList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "description": "El público ve solo videojuegos activos. El administrador autenticado puede filtrar por activo=true, false o todos.",
+        "security": [
+          {},
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pagina"
+          },
+          {
+            "$ref": "#/components/parameters/limite"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "genre",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "min_price",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "max_price",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Video Games"
+        ],
+        "summary": "Crear videojuego (administrador)",
+        "operationId": "post_api_video_games",
+        "responses": {
+          "201": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoGameMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VideoGameInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/video-games/{id}": {
+      "get": {
+        "tags": [
+          "Video Games"
+        ],
+        "summary": "Consultar videojuego",
+        "operationId": "get_api_video_games_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoGame"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {},
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Video Games"
+        ],
+        "summary": "Reemplazar los datos del videojuego",
+        "operationId": "put_api_video_games_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoGameMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VideoGameInput"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Video Games"
+        ],
+        "summary": "Modificar campos del videojuego",
+        "operationId": "patch_api_video_games_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoGameMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VideoGamePatch"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Video Games"
+        ],
+        "summary": "Eliminar videojuego sin compras",
+        "operationId": "delete_api_video_games_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      }
+    },
+    "/api/video-games/{id}/genres": {
+      "get": {
+        "tags": [
+          "Video Games"
+        ],
+        "summary": "Listar géneros del videojuego",
+        "operationId": "get_api_video_games_id_genres",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenreList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {},
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      }
+    },
+    "/api/video-games/{id}/genres/{genreId}": {
+      "put": {
+        "tags": [
+          "Video Games"
+        ],
+        "summary": "Asociar un género al videojuego",
+        "operationId": "put_api_video_games_id_genres_genreId",
+        "responses": {
+          "200": {
+            "description": "Asociación ya existente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenresMessage"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenresMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "description": "Primera asociación: 201. Si ya existe, responde 200 (operación idempotente).",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/genreId"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Video Games"
+        ],
+        "summary": "Quitar el género del videojuego",
+        "operationId": "delete_api_video_games_id_genres_genreId",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/genreId"
+          }
+        ]
+      }
+    },
+    "/api/genres": {
+      "get": {
+        "tags": [
+          "Genres"
+        ],
+        "summary": "Listar generos",
+        "operationId": "get_api_genres",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenreList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "tags": [
+          "Genres"
+        ],
+        "summary": "Crear género (administrador)",
+        "operationId": "post_api_genres",
+        "responses": {
+          "201": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenreMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogName"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/genres/{id}": {
+      "get": {
+        "tags": [
+          "Genres"
+        ],
+        "summary": "Consultar género",
+        "operationId": "get_api_genres_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Genre"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Genres"
+        ],
+        "summary": "Renombrar género (administrador)",
+        "operationId": "put_api_genres_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenreMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogName"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Genres"
+        ],
+        "summary": "Eliminar género (administrador)",
+        "operationId": "delete_api_genres_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      }
+    },
+    "/api/tags": {
+      "get": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "Listar etiquetas",
+        "operationId": "get_api_tags",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "Crear etiqueta (administrador)",
+        "operationId": "post_api_tags",
+        "responses": {
+          "201": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogName"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tags/{id}": {
+      "get": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "Consultar etiqueta",
+        "operationId": "get_api_tags_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tag"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "Renombrar etiqueta (administrador)",
+        "operationId": "put_api_tags_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogName"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "Eliminar etiqueta (administrador)",
+        "operationId": "delete_api_tags_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      }
+    },
+    "/api/purchases": {
+      "get": {
+        "tags": [
+          "Purchases"
+        ],
+        "summary": "Listar compras para consulta de ventas (administrador)",
+        "operationId": "get_api_purchases",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pagina"
+          },
+          {
+            "$ref": "#/components/parameters/limite"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "video_game_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Purchases"
+        ],
+        "summary": "Registrar compra pendiente (usuario autenticado)",
+        "operationId": "post_api_purchases",
+        "responses": {
+          "201": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchases/{id}": {
+      "get": {
+        "tags": [
+          "Purchases"
+        ],
+        "summary": "Consultar compra (dueño o administrador)",
+        "operationId": "get_api_purchases_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Purchase"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Purchases"
+        ],
+        "summary": "Cancelar compra pendiente",
+        "operationId": "delete_api_purchases_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      }
+    },
+    "/api/purchases/{id}/status": {
+      "patch": {
+        "tags": [
+          "Purchases"
+        ],
+        "summary": "Confirmar o marcar fallida una compra (administrador)",
+        "operationId": "patch_api_purchases_id_status",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseStatus"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}/purchases": {
+      "get": {
+        "tags": [
+          "Purchases"
+        ],
+        "summary": "Consultar compras o biblioteca del usuario",
+        "operationId": "get_api_users_id_purchases",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "description": "Para biblioteca usar estado=confirmada. La biblioteca no necesita tabla independiente.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/pagina"
+          },
+          {
+            "$ref": "#/components/parameters/limite"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "video_game_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/reviews": {
+      "get": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Listar reseñas con filtros",
+        "operationId": "get_api_reviews",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pagina"
+          },
+          {
+            "$ref": "#/components/parameters/limite"
+          },
+          {
+            "name": "video_game_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "rating",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Crear reseña de un juego con compra confirmada",
+        "operationId": "post_api_reviews",
+        "responses": {
+          "201": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reviews/{id}": {
+      "get": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Consultar reseña",
+        "operationId": "get_api_reviews_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Review"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Actualizar reseña (solo autor)",
+        "operationId": "put_api_reviews_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewContent"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Eliminar reseña (autor o administrador)",
+        "operationId": "delete_api_reviews_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      }
+    },
+    "/api/video-games/{id}/reviews": {
+      "get": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Listar reseñas de un videojuego",
+        "operationId": "get_api_video_games_id_reviews",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/pagina"
+          },
+          {
+            "$ref": "#/components/parameters/limite"
+          }
+        ]
+      }
+    },
+    "/api/video-games/{id}/achievements": {
+      "get": {
+        "tags": [
+          "Achievements"
+        ],
+        "summary": "Listar logros del videojuego",
+        "operationId": "get_api_video_games_id_achievements",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Achievements"
+        ],
+        "summary": "Crear logro para el videojuego (administrador)",
+        "operationId": "post_api_video_games_id_achievements",
+        "responses": {
+          "201": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AchievementInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/achievements/{id}": {
+      "get": {
+        "tags": [
+          "Achievements"
+        ],
+        "summary": "Consultar logro",
+        "operationId": "get_api_achievements_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Achievement"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Achievements"
+        ],
+        "summary": "Actualizar definición del logro (administrador)",
+        "operationId": "put_api_achievements_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AchievementInput"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Achievements"
+        ],
+        "summary": "Eliminar logro (administrador)",
+        "operationId": "delete_api_achievements_id",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ]
+      }
+    },
+    "/api/users/{id}/achievements": {
+      "get": {
+        "tags": [
+          "Progress"
+        ],
+        "summary": "Listar progreso de logros del usuario",
+        "operationId": "get_api_users_id_achievements",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/video_game_id"
+          }
+        ]
+      }
+    },
+    "/api/users/{id}/achievements/{achievementId}": {
+      "get": {
+        "tags": [
+          "Progress"
+        ],
+        "summary": "Consultar progreso de logro del usuario",
+        "operationId": "get_api_users_id_achievements_achievementId",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Progress"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/achievementId"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Progress"
+        ],
+        "summary": "Guardar progreso de logro del usuario",
+        "operationId": "put_api_users_id_achievements_achievementId",
+        "responses": {
+          "200": {
+            "description": "Progreso actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressMessage"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con los datos actuales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Ya existe un registro con esos datos."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "description": "Primera vez: 201. Posteriores actualizaciones: 200. Requiere compra confirmada y progreso no decreciente.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/achievementId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgressInput"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Progress"
+        ],
+        "summary": "Reiniciar progreso del logro",
+        "operationId": "delete_api_users_id_achievements_achievementId",
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "El campo solicitado no es válido."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta token o token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "message": "No tienes permisos para realizar esta operación."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Registro no encontrado."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Error interno del servidor."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/achievementId"
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token devuelto por POST /api/sessions"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Datos inválidos."
+          },
+          "message": {
+            "type": "string",
+            "example": "No tienes permisos para realizar esta operación."
+          },
+          "details": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          }
+        },
+        "description": "Los errores de validación usan error; los del middleware JWT usan mensaje."
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Operación completada correctamente."
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Valentina López"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "valentina@example.com"
+          },
+          "accepted_terms": {
+            "type": "boolean",
+            "example": true
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "administrator"
+            ]
+          },
+          "registration_date": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "Nunca se expone la contraseña en las respuestas."
+      },
+      "UserRegistration": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "example": "Valentina López"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "valentina@example.com"
+          },
+          "password": {
+          "type": "string",
+          "minLength": 15,
+          "maxLength": 100,
+          "example": "GameVaultSecure2026!"
+          },
+          "accepted_terms": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password",
+          "accepted_terms"
+        ]
+      },
+      "Login": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "valentina@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "clave123"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "UserUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "example": "Valentina López"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "valentina@example.com"
+          }
+        },
+        "required": [
+          "name",
+          "email"
+        ]
+      },
+      "PasswordChange": {
+        "type": "object",
+        "properties": {
+      "password": {
+          "type": "string",
+          "minLength": 15,
+          "maxLength": 100,
+          "example": "GameVaultNewPassword2026!"
+      }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "VideoGame": {
+        "type": "object",
+        "properties": {
+          "video_game_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Hollow Knight"
+          },
+          "image_url": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "example": "Juego de aventuras"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0,
+            "example": 45000
+          },
+          "age_rating": {
+            "type": "string",
+            "enum": [
+              "TODOS",
+              "3+",
+              "7+",
+              "12+",
+              "16+",
+              "18+"
+            ]
+          },
+          "is_active": {
+            "type": "boolean",
+            "example": true
+          },
+          "genres": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genre"
+            }
+          },
+          "average_rating": {
+            "type": "number",
+            "nullable": true
+          },
+          "review_count": {
+            "type": "integer"
+          }
+        },
+        "description": "Incluye información calculada si la consulta del repositorio la devuelve."
+      },
+      "VideoGameInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "example": "Hollow Knight"
+          },
+          "image_url": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri",
+            "example": "https://example.com/juego.jpg"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 5000,
+            "example": "Juego de aventuras"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 99999999.99,
+            "example": 45000
+          },
+          "age_rating": {
+            "type": "string",
+            "enum": [
+              "TODOS",
+              "3+",
+              "7+",
+              "12+",
+              "16+",
+              "18+"
+            ],
+            "example": "12+"
+          },
+          "is_active": {
+            "type": "boolean",
+            "example": true
+          },
+          "genres": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": [
+              1,
+              2
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "price",
+          "age_rating"
+        ]
+      },
+      "VideoGamePatch": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "example": "Hollow Knight"
+          },
+          "image_url": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri",
+            "example": "https://example.com/juego.jpg"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 5000,
+            "example": "Juego de aventuras"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 99999999.99,
+            "example": 45000
+          },
+          "age_rating": {
+            "type": "string",
+            "enum": [
+              "TODOS",
+              "3+",
+              "7+",
+              "12+",
+              "16+",
+              "18+"
+            ],
+            "example": "12+"
+          },
+          "is_active": {
+            "type": "boolean",
+            "example": true
+          },
+          "genres": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": [
+              1,
+              2
+            ]
+          }
+        },
+        "description": "Al menos un campo editable; el servicio fusiona los cambios con la información existente."
+      },
+      "Genre": {
+        "type": "object",
+        "properties": {
+          "genre_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Aventura"
+          },
+          "video_game_count": {
+            "type": "integer",
+            "example": 2
+          }
+        }
+      },
+      "Tag": {
+        "type": "object",
+        "properties": {
+          "tag_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Recomendado"
+          },
+          "review_count": {
+            "type": "integer",
+            "example": 3
+          }
+        }
+      },
+      "CatalogName": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Aventura"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "Purchase": {
+        "type": "object",
+        "properties": {
+          "purchase_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "video_game_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "purchase_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "price_paid": {
+            "type": "number",
+            "minimum": 0,
+            "example": 45000
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "failed"
+            ]
+          }
+        }
+      },
+      "PurchaseInput": {
+        "type": "object",
+        "properties": {
+          "video_game_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          }
+        },
+        "required": [
+          "video_game_id"
+        ]
+      },
+      "PurchaseStatus": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "failed"
+            ],
+            "example": "confirmed"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "Review": {
+        "type": "object",
+        "properties": {
+          "review_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "video_game_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "example": 5
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true,
+            "example": "¡Me encantó!"
+          },
+          "hours_played": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "example": 25
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            }
+          },
+          "review_date": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReviewContent": {
+        "type": "object",
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "example": 5
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000,
+            "example": "Muy bueno"
+          },
+          "hours_played": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 99999.99,
+            "example": 12.5
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxItems": 10,
+            "example": [
+              1
+            ]
+          }
+        },
+        "required": [
+          "rating"
+        ]
+      },
+      "ReviewCreate": {
+        "type": "object",
+        "properties": {
+          "video_game_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "example": 5
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000,
+            "example": "Muy bueno"
+          },
+          "hours_played": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 99999.99,
+            "example": 12.5
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxItems": 10,
+            "example": [
+              1
+            ]
+          }
+        },
+        "required": [
+          "video_game_id",
+          "rating"
+        ]
+      },
+      "Achievement": {
+        "type": "object",
+        "properties": {
+          "achievement_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "video_game_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Primer nivel"
+          },
+          "description": {
+            "type": "string",
+            "example": "Completar el primer nivel"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "simple",
+              "progress",
+              "date"
+            ]
+          },
+          "target": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1,
+            "example": 10
+          }
+        }
+      },
+      "AchievementInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "example": "Coleccionista"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "example": "Consigue 10 objetos"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "simple",
+              "progress",
+              "date"
+            ],
+            "example": "progress"
+          },
+          "target": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1,
+            "example": 10
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ]
+      },
+      "Progress": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "achievement_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "progress": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 5
+          },
+          "is_unlocked": {
+            "type": "boolean",
+            "example": false
+          },
+          "unlock_date": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "ProgressInput": {
+        "type": "object",
+        "properties": {
+          "progress": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          }
+        },
+        "required": [
+          "progress"
+        ]
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "example": 1
+          },
+          "limit": {
+            "type": "integer",
+            "example": 20
+          },
+          "total": {
+            "type": "integer",
+            "example": 1
+          },
+          "pages": {
+            "type": "integer",
+            "example": 1
+          }
+        },
+        "additionalProperties": true
+      },
+      "VideoGameList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VideoGame"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ]
+      },
+      "PurchaseList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Purchase"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ]
+      },
+      "ReviewList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Review"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ]
+      },
+      "UserList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/User"
+        }
+      },
+      "GenreList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Genre"
+        }
+      },
+      "TagList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Tag"
+        }
+      },
+      "AchievementList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Achievement"
+        }
+      },
+      "ProgressList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Progress"
+        }
+      },
+      "UserMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Usuario registrado correctamente."
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "message",
+          "user"
+        ]
+      },
+      "LoginMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Inicio de sesión exitoso."
+          },
+          "token": {
+            "type": "string",
+            "description": "JWT Bearer válido por 2 horas."
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "message",
+          "token",
+          "user"
+        ]
+      },
+      "VideoGameMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Operación completada."
+          },
+          "video_game": {
+            "$ref": "#/components/schemas/VideoGame"
+          }
+        },
+        "required": [
+          "message",
+          "video_game"
+        ]
+      },
+      "PurchaseMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Operación completada."
+          },
+          "purchase": {
+            "$ref": "#/components/schemas/Purchase"
+          }
+        },
+        "required": [
+          "message",
+          "purchase"
+        ]
+      },
+      "ReviewMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Operación completada."
+          },
+          "review": {
+            "$ref": "#/components/schemas/Review"
+          }
+        },
+        "required": [
+          "message",
+          "review"
+        ]
+      },
+      "AchievementMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Operación completada."
+          },
+          "achievement": {
+            "$ref": "#/components/schemas/Achievement"
+          }
+        },
+        "required": [
+          "message",
+          "achievement"
+        ]
+      },
+      "ProgressMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Operación completada."
+          },
+          "progress": {
+            "$ref": "#/components/schemas/Progress"
+          }
+        },
+        "required": [
+          "message",
+          "progress"
+        ]
+      },
+      "GenresMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "genres": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genre"
+            }
+          }
+        },
+        "required": [
+          "message",
+          "genres"
+        ]
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "API de GameVault funcionando"
+          }
+        },
+        "required": [
+          "ok",
+          "message"
+        ]
+      },
+      "GenreMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Genero creado correctamente."
+          },
+          "genre_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Aventura"
+          }
+        },
+        "required": [
+          "message",
+          "genre_id",
+          "name"
+        ]
+      },
+      "TagMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Etiqueta creado correctamente."
+          },
+          "tag_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Aventura"
+          }
+        },
+        "required": [
+          "message",
+          "tag_id",
+          "name"
+        ]
+      }
+    },
+    "parameters": {
+      "id": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "Identificador entero positivo",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "genreId": {
+        "name": "genreId",
+        "in": "path",
+        "required": true,
+        "description": "ID del género",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "achievementId": {
+        "name": "achievementId",
+        "in": "path",
+        "required": true,
+        "description": "ID del logro",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        }
+      },
+      "video_game_id": {
+        "name": "video_game_id",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}
