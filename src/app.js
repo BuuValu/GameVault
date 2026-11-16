@@ -45,6 +45,11 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapi, {
     customSiteTitle: 'GameVault | Swagger API'
 }));
 
+
+
+const path = require('path');
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
 const notFoundHandler = require('./middleware/not-found');
 const errorHandler = require('./middleware/error-handler');
 
