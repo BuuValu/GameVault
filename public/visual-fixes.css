@@ -1,0 +1,88 @@
+
+.cover {
+  background-position: center center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+
+.cover[style*="url("]::before {
+  background: linear-gradient(
+    180deg,
+    rgba(10, 5, 25, .10),
+    rgba(10, 5, 25, .63)
+  );
+}
+
+.cover[style*="url("] .cover-title {
+  max-width: 90%;
+  font-size: clamp(16px, 2vw, 26px);
+  overflow-wrap: anywhere;
+  text-shadow: 0 2px 9px #080311, 0 0 15px #080311;
+}
+
+.game-card .cover {
+  height: 200px;
+}
+
+.detail-left .cover {
+  height: 300px;
+}
+
+.achievement:has(> div > .cover) {
+  grid-template-columns: minmax(150px, 230px) minmax(0, 1fr);
+  gap: 24px;
+  padding: 20px 24px;
+  border-radius: 28px;
+  align-items: center;
+}
+
+.achievement:has(> div > .cover) > div {
+  min-width: 0;
+}
+
+.achievement:has(> div > .cover) .cover {
+  width: 100%;
+  height: 155px;
+  border-radius: 16px;
+}
+
+.achievement:has(> div > .cover) h2 {
+  overflow-wrap: anywhere;
+  margin: 10px 0;
+}
+
+.achievement-list .achievement {
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 14px;
+  border-radius: 24px;
+}
+
+.achievement-list .achievement > div {
+  min-width: 0;
+}
+
+.cover.gv-local-cover .cover-title,
+.cover.gv-local-cover .cover-kicker {
+  display: none;
+}
+
+@media (max-width: 650px) {
+  .achievement:has(> div > .cover) {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .achievement:has(> div > .cover) .cover {
+    height: 180px;
+  }
+
+  .achievement-list .achievement {
+    grid-template-columns: 42px minmax(0, 1fr);
+    border-radius: 18px;
+  }
+
+  .achievement-list .achievement > span:last-child {
+    grid-column: 2;
+  }
+}
